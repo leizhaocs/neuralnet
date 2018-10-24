@@ -1,0 +1,125 @@
+Directory structure:
+
+    Folders:
+      cfg: Contains the configuration file of network topology
+      data: Contains the dataset
+      include: Contains the head files of SEAL-2.3.1
+      lib: Contains the static library compiled from SEAL-2.3.1
+      obj: Contains temporary objective files during compilation
+      src: Contains the source files
+      weights: Contains the trained weights files
+
+    Files:
+      nn: Executable binary
+      nsga-ii.input: This file is the configuration of NSGA-II for training
+      README: This file
+      SConstruct: Scons file
+
+Compile:
+
+    In the root directory of this project type:
+
+        scons
+
+Run:
+
+    Train:
+
+        ./nn train <dataset name> <network cfg file> < <nsga-ii cfg file>
+
+    Test:
+
+        ./nn test  <dataset name> <network cfg file> <weights file>
+
+Notes:
+
+    1. Set ENCRYPT to 1 in src/includes.h to use homomorphic encrypted version. Set
+       to 0 to use normal form (floating point).
+
+    2. Set BINARIZE to 1 in src/includes.h to use binarized weights. Set to 0 to use
+       full precision weights (floating point).
+
+    3. Currently, training with homomorphic encryption is not supported.
+
+    4. In test mode, can not use homomorphic encryption and binary weights at the same
+       time.
+
+Config file format:
+
+    To write a config file, the format must strictly follow the instructions in this
+    section. It is recommended to modify from an existing config file in cfg folder.
+
+    The first line is a single number indicating the total number of layers in the
+    network.
+
+    The second line must be empty.
+
+    The first layer must be the type of input. Next, I will describe the parameters of
+    Each layer.
+
+    [input]
+    shape: four integers seperated by space, meaning batch size, height of image, width
+           of image, channels of the image.
+
+    [convolution]
+    filterSize: three integers seperated by space, meaning number of filters, height of
+                each filter, width of each filter.
+    stride: two integers seperated by space, meaning the step along height and width
+            dimensions of the input.
+    padding: two integers seperated by space, meaning the number of 0 paddings on each
+             side of the height and width dimensions of the input. For example, if set
+             to 1 and 2, there will be 1 row of 0s padding on the top and bottom of the
+             image, and two rows of 0s padding on the left and right of the image.
+    biases: set to true meaning each filter is associated with a bias, set to false if
+            do not use bias.
+
+    [full]
+    length: one integer indicating the number of output neurons.
+    biases: set to true meaning output is added with a bias, set to false if do not use
+            bias.
+
+    [activation]
+    nonlinear: a string one of "square", "relu", "leakyrelu" and "softmax".
+
+    [pool]
+    poolType: a string one of "max", "mean" and "scaledmean".
+    filterSize: two integers seperated by space, meaning pooling window size along height
+                and width dimensions of the input.
+    stride: two integers seperated by space, meaning the step along height and width
+            dimensions of the input.
+    padding: two integers seperated by space, meaning the number of 0 paddings on each
+             side of the height and width dimensions of the input. For example, if set
+             to 1 and 2, there will be 1 row of 0s padding on the top and bottom of the
+             image, and two rows of 0s padding on the left and right of the image.
+
+    [batchnormalization]
+    channels: one integer, if input shape is four-dimensional (e.g. the output of conv
+              layer), it equals to the number of channels, if the input shape is two-
+              dimensional (e.g. the output of full layer), it equals the the number of
+              neurons.
+
+    [residual]
+    layer: one integer <= 0, indicating the layer connected to. For example, -1 means the
+           prededing layer, -2 meaning the preceding layer of the preceding layer. The
+           output shape of this layer and the connected layer must be the same.
+
+    [concatenate]
+    layer: one integer <= 0, indicating the layer connected to. For example, -1 means the
+           prededing layer, -2 meaning the preceding layer of the preceding layer. The
+           output shape of this layer and the connected layer must be the same. If the
+           output is two-dimensional (e.g. the output of full layer), the neurals of the
+           connected layer are appended to the output of this layer. If the output shape
+           is four-dimensional (e.g. the output of conv layer), the output of the connected
+           layer are appended as additional channels of this layer's output.
+
+nsga-ii.input file format:
+
+    Population size (a multiple of 4).
+    Number of generations.
+    Number of objectives.
+    Lower limit of real variable.
+    Upper limit of real variable.
+    Probability of crossover of real variable (0.0-1.0).
+    Probablity of mutation of real variables (0.0-1.0).
+    Probability of crossover of binary variable (0.0-1.0).
+    Probablity of mutation of binary variables (0.0-1.0).
